@@ -8,7 +8,6 @@ define('APPLICATION_ENV', getenv('APPLICATION_ENV'));
 ini_set('error_reporting',            E_ALL | E_STRICT);
 ini_set('display_startup_errors',     0);
 ini_set('display_errors',             APPLICATION_ENV == 'development' ? 1 : 0);
-ini_set('display_errors',             1);
 ini_set('short_open_tag',             0);
 ini_set('default_charset',            'UTF-8');
 ini_set('mbstring.internal_encoding', 'UTF-8');

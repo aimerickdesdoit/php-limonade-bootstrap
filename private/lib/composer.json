@@ -1,0 +1,9 @@
+{ 
+  "require": {
+    "dbtlr/php-airbrake": "dev-master",
+    "firephp/firephp-core": "dev-master",
+    "sofadesign/limonade": "dev-master",
+    "intervention/image": "dev-master",
+    "swiftmailer/swiftmailer": "dev-master"
+  }
+}

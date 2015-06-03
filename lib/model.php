@@ -18,6 +18,16 @@ class Model {
     $this->_attributes[$var] = $value;
   }
 
+  public function __isset($var) {
+    return isset($this->_attributes[$var]);
+  }
+
+  public function __unset($var) {
+    if (array_key_exists($var, $this->_attributes)) {
+      unset($this->_attributes[$var]);
+    }
+  }
+
   public function getError($attribute) {
     return isset($this->_errors[$attribute]) ? $this->_errors[$attribute] : null;
   }

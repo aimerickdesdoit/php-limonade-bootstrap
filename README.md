@@ -19,3 +19,55 @@ config/settings.inc.php
     define('DB_NAME',     'php-limonade-bootstrap');
     define('DB_USER',     'root');
     define('DB_PASSWORD', 'root');
+
+## Développement
+
+### Migration
+
+Création d'un fichier de migration
+
+    rake db:create_migration NAME=create_records
+
+Édition de la migration
+
+    class CreateRecords < ActiveRecord::Migration
+      def self.up
+        create_table :records do |t|
+          t.string :label
+          t.timestamps
+        end
+      end
+    
+      def self.down
+        drop_table :records
+      end
+    end
+
+Exécution de la migration
+
+    rake db:migrate
+
+### Model
+
+Création du modèle
+
+    <?php
+    
+    class Record extends Model {
+    
+      protected static $_table_name = 'records';
+    
+      public function validate() {
+        if (!$this->label) {
+          $this->_errors['label'] = 'champ obligatoire';
+        }
+    
+        return count($this->_errors) == 0;
+      }
+    
+    }
+
+Utilisation du modèle
+
+    $record = new Record(array('label' => 'lorem ipsum'));
+    $record->save();

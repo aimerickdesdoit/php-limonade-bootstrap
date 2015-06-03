@@ -17,25 +17,23 @@ ini_set('magic_quotes_sybase',        0);
 ini_set('magic_quotes_runtime',       0);
 ini_set('auto_detect_line_endings',   0);
 
-define('PRIVATE_DIR', dirname(dirname(__FILE__)));
+define('ROOT_DIR', dirname(dirname(__FILE__)));
+define('PUBLIC_DIR',  ROOT_DIR . '/public');
 
-require_once PRIVATE_DIR . '/lib/vendor/autoload.php';
+require_once ROOT_DIR . '/vendor/autoload.php';
+
 ini_set('display_errors', APPLICATION_ENV == 'development' ? 1 : 0);
 
 function configure() {  
-  option('base_uri',      '/orsane/public/');
-  option('views_dir',     PRIVATE_DIR . '/views');
-  
-  try {
-      $db = new PDO('sqlite:' . PRIVATE_DIR . '/db/' . APPLICATION_ENV. '.sqlite');
-      $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  }
-  catch(PDOException $e) {
-      throw new Exception('Connexion failed : ' . $e->getMessage());
-  }
-  option('db_conn', $db);
+  option('base_uri',      BASE_URI);
+  option('views_dir',     ROOT_DIR . '/app/views');
+
+  layout('layouts/front.phtml');
 }
 
-function isAjax() {
-  return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
+require_once dirname(__FILE__) . '/settings.inc.php';
+
+$initializers = glob(ROOT_DIR . '/config/initializers/*.php');
+foreach ($initializers as $initializer) {
+  require_once $initializer;
 }

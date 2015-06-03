@@ -1,11 +1,9 @@
 <?php
 
-require_once dirname(dirname(__FILE__)) . '/private/config/application.php';
+require_once dirname(dirname(__FILE__)) . '/config/application.php';
 
-dispatch('/', 'index');
+require_once ROOT_DIR . '/app/controllers/front/pages_controller.php';
 
-function index() {
-  return html('index/index.phtml', 'layouts/default.phtml');
-}
+dispatch('/', 'pages_home');
 
 run();

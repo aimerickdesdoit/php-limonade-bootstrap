@@ -1,3 +1,13 @@
-.DS_Store
-private/db/*
-!private/db/.gitkeep
+*.sqlite
+.project
+.settings/*
+.idea/*
+.rvmrc
+.ruby-version
+.ruby-gemset
+*.scssc
+*.orig
+.DS_STORE
+vendor/bundle
+.bundle/config
+config/settings.inc.php

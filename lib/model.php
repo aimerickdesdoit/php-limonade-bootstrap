@@ -26,7 +26,11 @@ class Model {
     return is_null($this->id);
   }
 
-  public function validate() {
+  public function validate($throw = false) {
+    if (method_exists($this, '_beforeValidation')) {
+      $this->_beforeValidation();
+    }
+
     foreach (static::$_validators as $field => $validators) {
       $validators = (array) $validators;
       foreach ($validators as $validator) {
@@ -34,6 +38,15 @@ class Model {
         $this->$method($field);
       }
     }
+
+    if ($throw && $this->_errors) {
+      $messages = array();
+      foreach ($this->_errors as $field => $message) {
+        $messages[] = $field.' ('.$message.')';
+      }
+      throw new Exception('Validation error: ' . implode(', ', $messages));
+    }
+
     return count($this->_errors) == 0;
   }
 
@@ -43,10 +56,15 @@ class Model {
     }
   }
 
-  public function save($attributes = array()) {
+  public function save($attributes = array(), $throw = false) {
+    if (count(func_get_args()) == 1 && is_bool($attributes)) {
+      $throw = $attributes;
+      $attributes = array();
+    }
+
     $this->_attributes = array_merge($this->_attributes, $attributes);
 
-    if (!$this->validate()) {
+    if (!$this->validate($throw)) {
       return false;
     }
 
@@ -67,7 +85,7 @@ class Model {
       $sql = 'UPDATE '.static::$_table_name.' SET '.implode($sets, ', ').' WHERE id = :id';
 
       $stmt = self::pdo()->prepare($sql);
-      return $stmt->execute($this->_attributes);
+      $execute = $stmt->execute($this->_attributes);
     }
     else {
       $this->created_at = date('Y-m-d H:i:s');
@@ -86,9 +104,13 @@ class Model {
       $execute = $stmt->execute($this->_attributes);
 
       $this->id = self::pdo()->lastInsertId();
-
-      return $execute;
     }
+
+    if ($throw && !$execute) {
+      throw new Exception('Unknown save error');
+    }
+
+    return $execute;
   }
 
   public function destroy() {

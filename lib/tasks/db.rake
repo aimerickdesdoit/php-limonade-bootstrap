@@ -1,7 +1,8 @@
 require 'active_record'
 
 namespace :db do
-  
+
+  desc "Migrate the database (options: VERSION=x)"
   task :migrate do |t|
     ActiveRecord::Base.establish_connection(database_config)
     ActiveRecord::Migrator.migrate('db/migrate', ENV['VERSION'] ? ENV['VERSION'].to_i : nil )
@@ -31,5 +32,11 @@ namespace :db do
       EOS
     end
   end
-  
+
+  desc "Load the seed data from db/seeds.php"
+  task :seed do
+    php_file = File.join('db', 'seeds.php')
+    system("export APPLICATION_ENV=development && php #{php_file}")
+  end
+
 end

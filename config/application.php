@@ -18,21 +18,17 @@ ini_set('magic_quotes_runtime',       0);
 ini_set('auto_detect_line_endings',   0);
 
 define('ROOT_DIR', dirname(dirname(__FILE__)));
-define('PUBLIC_DIR',  ROOT_DIR . '/public');
 
+// Require composer
 require_once ROOT_DIR . '/vendor/autoload.php';
 
+// Limonade : must be called explicitly in app file if you want to show errors before running app
 ini_set('display_errors', APPLICATION_ENV == 'development' ? 1 : 0);
 
-function configure() {  
-  option('base_uri',      BASE_URI);
-  option('views_dir',     ROOT_DIR . '/app/views');
-
-  layout('layouts/front.phtml');
-}
-
+// Require local settings
 require_once dirname(__FILE__) . '/settings.inc.php';
 
+// Require initializers
 $initializers = glob(ROOT_DIR . '/config/initializers/*.php');
 foreach ($initializers as $initializer) {
   require_once $initializer;

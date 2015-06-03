@@ -14,7 +14,7 @@ class EventHandler extends \Airbrake\EventHandler {
       self::$instance = new self($client, $notifyOnWarning);
       
       if (null !== $config->errorReportingLevel){
-          self::$instance->addErrorFilter(new \Airbrake\EventFilter\Error\ErrorReporting($config));
+        self::$instance->addErrorFilter(new \Airbrake\EventFilter\Error\ErrorReporting($config));
       }
 
       self::$instance->addExceptionFilter(new \Airbrake\EventFilter\Exception\AirbrakeExceptionFilter());
@@ -23,7 +23,7 @@ class EventHandler extends \Airbrake\EventHandler {
       set_exception_handler(array(self::$instance, 'onException'));
       register_shutdown_function(array(self::$instance, 'onShutdown'));
     }
-  
+
     return self::$instance;
   }
   
@@ -55,7 +55,7 @@ class EventHandler extends \Airbrake\EventHandler {
       // ne fonctionne pas chez Oxalide
       header($_SERVER['SERVER_PROTOCOL'] . ' Internal Server Error', true, 500);
     }
-    echo file_get_contents(PUBLIC_DIR.'/500.html');
+    echo file_get_contents(ROOT_DIR.'/public/500.html');
   }
   
   protected function _header_status($status_code) {

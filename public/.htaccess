@@ -1,4 +1,3 @@
-SetEnv PHP_VER 5_TEST
 SetEnv APPLICATION_ENV development
 
 <IfModule mod_mime.c>
@@ -6,11 +5,20 @@ SetEnv APPLICATION_ENV development
 </IfModule>
 
 <IfModule mod_rewrite.c>
-	Options +FollowSymlinks
-	Options +Indexes
-	RewriteEngine on
-	
-	RewriteCond %{SCRIPT_FILENAME} !-f
-	RewriteCond %{SCRIPT_FILENAME} !-d
-	RewriteRule ^(.*)$   index.php?/$1    [NC,L]	
+  Options +FollowSymlinks
+  Options +Indexes
+  RewriteEngine on
+
+  # if your app is in a subfolder
+  # RewriteBase /my_app/
+
+  # test string is a valid files
+  RewriteCond %{SCRIPT_FILENAME} !-f
+  # test string is a valid directory
+  RewriteCond %{SCRIPT_FILENAME} !-d
+
+  RewriteRule ^(.*)$   index.php?uri=/$1    [NC,L,QSA]
+  # with QSA flag (query string append),
+  # forces the rewrite engine to append a query string part of the
+  # substitution string to the existing string, instead of replacing it.
 </IfModule>

@@ -10,6 +10,8 @@ class Model {
     $this->_attributes = $attributes;
   }
 
+  /* ATTRIBUTES */
+
   public function __get($var) {
     return isset($this->_attributes[$var]) ? $this->_attributes[$var] : null;
   }
@@ -28,24 +30,57 @@ class Model {
     }
   }
 
-  public function getError($attribute) {
-    return isset($this->_errors[$attribute]) ? $this->_errors[$attribute] : null;
-  }
+  /* INSTANCE METHODS */
 
   public function new_record() {
     return is_null($this->id);
   }
 
-  public function validate($throw = false) {
-    if (method_exists($this, '_beforeValidation')) {
-      $this->_beforeValidation();
+  public function required($attribute) {
+    if (isset(static::$_validators[$attribute])) {
+      $validators = (array) static::$_validators[$attribute];
+      if (isset($validators['presence'])) {
+        $options = (array) $validators['presence'];
+        if (isset($options['if'])) {
+          return $this->$options['if']();
+        }
+      }
+      else {
+        return in_array('presence', $validators);
+      }
     }
+    return false;
+  }
+
+  /* CALLBACKS */
+
+  protected function _triggerCallback($when, $name) {
+    $method = '_'.strtolower($when).ucfirst(strtolower($name));
+    if (method_exists($this, $method)) {
+      $this->$method();
+    }
+  }
+
+  /* VALIDATORS */
+
+  public function valid($throw = false) {
+    $this->_triggerCallback('before', 'validation');
 
     foreach (static::$_validators as $field => $validators) {
       $validators = (array) $validators;
-      foreach ($validators as $validator) {
-        $method = '_validate' . $validator;
-        $this->$method($field);
+      foreach ($validators as $validator => $options) {
+        if (is_int($validator)) {
+          $validator = $options;
+          $options = array();
+        }
+        $execute = true;
+        if (is_array($options) && isset($options['if'])) {
+          $execute = $this->$options['if']();
+        }
+        if ($execute) {
+          $method = '_valid' . ucfirst(strtolower($validator));
+          $this->$method($field, $options);
+        }
       }
     }
 
@@ -57,14 +92,36 @@ class Model {
       throw new Exception('Validation error: ' . implode(', ', $messages));
     }
 
-    return count($this->_errors) == 0;
+    $valid = count($this->_errors) == 0;
+
+    if ($valid) {
+      $this->_triggerCallback('after', 'validation');
+    }
+
+    return $valid;
   }
 
-  protected function _validatePresence($field) {
-    if (!$this->$field) {
-      $this->_errors[$field] = 'Ce champ est obligatoire';
+  protected function _validPresence($attribute) {
+    if (!$this->$attribute) {
+      $this->_errors[$attribute] = 'doit être rempli(e)';
     }
   }
+
+  protected function _validFormat($attribute, $pattern = array()) {
+    if (!preg_match($pattern, $this->$attribute)) {
+      $this->_errors[$attribute] = 'n\'est pas valide';
+    }
+  }
+
+  public function getErrors() {
+    return $this->_errors;
+  }
+
+  public function getError($attribute) {
+    return isset($this->_errors[$attribute]) ? $this->_errors[$attribute] : null;
+  }
+
+  /* DB ACCESS */
 
   public function save($attributes = array(), $throw = false) {
     if (count(func_get_args()) == 1 && is_bool($attributes)) {
@@ -74,9 +131,11 @@ class Model {
 
     $this->_attributes = array_merge($this->_attributes, $attributes);
 
-    if (!$this->validate($throw)) {
+    if (!$this->valid($throw)) {
       return false;
     }
+
+    $this->_triggerCallback('before', 'save');
 
     if ($this->id) {
       $this->updated_at = date('Y-m-d H:i:s');
@@ -98,6 +157,8 @@ class Model {
       $execute = $stmt->execute($this->_attributes);
     }
     else {
+      $this->_triggerCallback('before', 'create');
+
       $this->created_at = date('Y-m-d H:i:s');
       $this->updated_at = date('Y-m-d H:i:s');
 
@@ -114,6 +175,14 @@ class Model {
       $execute = $stmt->execute($this->_attributes);
 
       $this->id = self::pdo()->lastInsertId();
+
+      if ($execute) {
+        $this->_triggerCallback('after', 'create');
+      }
+    }
+
+    if ($execute) {
+      $this->_triggerCallback('after', 'save');
     }
 
     if ($throw && !$execute) {

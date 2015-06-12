@@ -39,7 +39,11 @@ class Model {
   public function required($attribute) {
     if (isset(static::$_validators[$attribute])) {
       $validators = (array) static::$_validators[$attribute];
-      if (isset($validators['presence'])) {
+
+      if (isset($validators['if'])) {
+        return $this->$validators['if']();
+      }
+      else if (isset($validators['presence'])) {
         $options = (array) $validators['presence'];
         if (isset($options['if'])) {
           return $this->$options['if']();
@@ -68,6 +72,15 @@ class Model {
 
     foreach (static::$_validators as $field => $validators) {
       $validators = (array) $validators;
+
+      if (isset($validators['if'])) {
+        $execute = $this->$validators['if']();
+        unset($validators['if']);
+        if (!$execute) {
+          continue;
+        }
+      }
+
       foreach ($validators as $validator => $options) {
         if (is_int($validator)) {
           $validator = $options;
@@ -107,8 +120,11 @@ class Model {
     }
   }
 
-  protected function _validFormat($attribute, $pattern = array()) {
-    if (!preg_match($pattern, $this->$attribute)) {
+  protected function _validFormat($attribute, $options = array()) {
+    if (!is_array($options)) {
+      $options = array('with' => $options);
+    }
+    if (!preg_match($options['with'], $this->$attribute)) {
       $this->_errors[$attribute] = 'n\'est pas valide';
     }
   }
